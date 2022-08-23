@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CertificateArn:
+    Type: String
+  Domain:
+    Type: String
+    Default: rhysc.me
+  ZoneId:
+    Type: String
+
+Resources:
+  RhysCMEBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Domain
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+
+  RhysCMEBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RhysCMEBucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Resource: !Sub 'arn:aws:s3:::${RhysCMEBucket}/*'
+            Principal: '*'
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: True
+        Aliases:
+          - !Ref Domain
+          - !Join
+            - ''
+            - - 'www.'
+              - !Ref Domain
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+        Origins:
+          - DomainName: !Select [1, !Split ["//", !GetAtt RhysCMEBucket.WebsiteURL]]
+            Id: S3Origin
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          AllowedMethods:
+            - GET
+            - HEAD
+          Compress: True
+          DefaultTTL: 30
+          MinTTL: 5
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+
+  Route53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref ZoneId
+      Name: !Ref Domain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+
+  WWWRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref ZoneId
+      Name: !Join
+        - ''
+        - - 'www.'
+          - !Ref Domain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
