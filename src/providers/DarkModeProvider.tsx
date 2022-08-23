@@ -18,7 +18,7 @@ export const DarkModeProvider: React.FC<React.PropsWithChildren> = ({ children }
     <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
       {children}
       <Helmet>
-        <body className={`${darkMode ? 'dark bg-zinc-800' : 'bg-zinc-100'} px-2`} />
+        <body className={`${darkMode ? 'dark bg-zinc-800' : 'bg-zinc-100'} px-2 transition-[background-color]`} />
       </Helmet>
     </DarkModeContext.Provider>
   );
