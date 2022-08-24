@@ -12,7 +12,7 @@ export const DarkModeContext = createContext<DarkModeContextType>({
 });
 
 export const DarkModeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
 
   return (
     <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
