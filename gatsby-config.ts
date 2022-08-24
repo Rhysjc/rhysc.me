@@ -17,6 +17,7 @@ const config: GatsbyConfig = {
         ],
       },
     },
+    'gatsby-plugin-dark-mode',
   ],
 };
 

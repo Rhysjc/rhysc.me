@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { useDarkMode } from '../hooks/useDarkMode';
+import { ThemeToggler } from 'gatsby-plugin-dark-mode';
 
 const LightModeIcon: React.FC = () => {
   return (
@@ -19,13 +18,22 @@ const DarkModeIcon: React.FC = () => {
 };
 
 export const DarkModeToggle: React.FC = () => {
-  const { darkMode, setDarkMode } = useDarkMode();
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
   return (
-    <button className='p-2 rounded-md bg-purple-600 transition-all hover:-translate-y-0.5 hover:shadow-md outline-none focus-visible:ring-2 ring-offset-1 ring-purple-600 ring-offset-zinc-100 dark:ring-offset-zinc-800' onClick={toggleDarkMode}>{darkMode ? <DarkModeIcon /> : <LightModeIcon />}</button>
+    <ThemeToggler>
+        {({ theme, toggleTheme }) => {
+          if (theme == null) {
+            return null;
+          }
+
+          return (
+            <button
+              className='p-2 rounded-md bg-purple-600 transition-all hover:-translate-y-0.5 hover:shadow-md outline-none focus-visible:ring-2 ring-offset-1 ring-purple-600 ring-offset-zinc-100 dark:ring-offset-zinc-800'
+              onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
+            </button>
+          );
+        }}
+    </ThemeToggler>
   );
 };
