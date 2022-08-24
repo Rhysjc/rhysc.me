@@ -21,7 +21,7 @@ export default IndexPage;
 
 export const Head: HeadFC = () => (
   <>
-    <link rel="icon" href="https://rhysc.me/favicon.ico"></link>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <title>Rhys Camm</title>
   </>
 );
