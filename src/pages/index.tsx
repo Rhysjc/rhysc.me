@@ -3,6 +3,7 @@ import type { HeadFC } from 'gatsby';
 
 import { Header } from '../components/Header';
 import { Hero } from '../components/Hero';
+import { Projects } from '../components/Projects';
 import { Skills } from '../components/Skills';
 
 const IndexPage = () => {
@@ -11,6 +12,7 @@ const IndexPage = () => {
       <Header />
       <main className='container m-auto'>
         <Hero />
+        <Projects />
         <Skills />
       </main>
     </>
