@@ -19,4 +19,9 @@ const IndexPage = () => {
 
 export default IndexPage;
 
-export const Head: HeadFC = () => <title>Rhys Camm</title>;
+export const Head: HeadFC = () => (
+  <>
+    <link rel="icon" href="https://rhysc.me/favicon.ico"></link>
+    <title>Rhys Camm</title>
+  </>
+);

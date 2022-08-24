@@ -17,7 +17,12 @@ const config: GatsbyConfig = {
         ],
       },
     },
-    'gatsby-plugin-dark-mode',
+    {
+      resolve: 'gatsby-plugin-use-dark-mode',
+      options: {
+        classNameDark: 'dark',
+      },
+    },
   ],
 };
 
