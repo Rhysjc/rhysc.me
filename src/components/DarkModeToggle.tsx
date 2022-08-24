@@ -21,10 +21,6 @@ export const DarkModeToggle: React.FC = () => {
   return (
     <ThemeToggler>
         {({ theme, toggleTheme }) => {
-          if (theme == null) {
-            return null;
-          }
-
           return (
             <button
               className='p-2 rounded-md bg-purple-600 transition-all hover:-translate-y-0.5 hover:shadow-md outline-none focus-visible:ring-2 ring-offset-1 ring-purple-600 ring-offset-zinc-100 dark:ring-offset-zinc-800'
