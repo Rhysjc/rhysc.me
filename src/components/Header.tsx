@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
       <div className="container m-auto flex flex-row justify-between items-center py-4">
         <Logo />
         <div className='flex flex-1 flex-row justify-end items-center'>
-          <div className='font-serif mr-4'>
+          <div className='font-serif mr-4 text-zinc-800 dark:text-zinc-100'>
             <Link to="/blog" internal>Blog</Link>
           </div>
           <a href="mailto:rhysjc@gmail.com" target="_blank" rel="noreferrer" className="mr-4"><Email /></a>
