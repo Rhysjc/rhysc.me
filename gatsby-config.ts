@@ -32,6 +32,9 @@ const config: GatsbyConfig = {
         gatsbyRemarkPlugins: [
           {
             resolve: 'gatsby-remark-prismjs',
+            options: {
+              noInlineHighlight: true,
+            },
           },
         ],
       },

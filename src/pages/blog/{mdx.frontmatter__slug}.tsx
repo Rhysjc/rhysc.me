@@ -26,7 +26,7 @@ const BlogPost: React.FC<React.PropsWithChildren<Props>> = ({ data, children }) 
     <Layout>
       <div className='max-w-full md:max-w-5xl m-auto'>
         <div>
-          <h1 className='inline-block font-semibold font-serif text-4xl md:text-5xl text-zinc-800 dark:text-zinc-100 mt-5 mb-5 border-b-2 border-purple-600 transition-[padding-bottom,border-bottom-width] pb-0.5 hover:border-b-4 hover:pb-0'>{data.mdx.frontmatter.title}</h1>
+          <h1 className='inline-block font-semibold font-serif text-xl md:text-3xl text-zinc-800 dark:text-zinc-100 mt-5 mb-5 border-b-2 border-purple-600 transition-[padding-bottom,border-bottom-width] pb-0.5 hover:border-b-4 hover:pb-0'>{data.mdx.frontmatter.title}</h1>
         </div>
         <MDXProvider components={MarkdownComponents}>{children}</MDXProvider>
       </div>
