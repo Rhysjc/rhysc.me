@@ -22,6 +22,7 @@ module.exports = {
     '@typescript-eslint/semi': ['error', 'always'],
     '@typescript-eslint/explicit-function-return-type': 'off',
     'comma-dangle': ['error', 'always-multiline'],
+    'react/prop-types': 'off',
   },
   settings: {
     react: {
