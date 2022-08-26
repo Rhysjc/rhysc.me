@@ -8,6 +8,8 @@ Parameters:
     Default: rhysc.me
   ZoneId:
     Type: String
+  AccountId:
+    Type: String
 
 Resources:
   RhysCMEBucket:
@@ -107,6 +109,69 @@ Resources:
       TopicArn: !Ref EmailProxySNSTopic
       Protocol: email-json
       Endpoint: rhysjc@gmail.com
+
+  ProxyLambdaScriptBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: rhyscme-email-proxy
+
+  ProxyLambdaScriptBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ProxyLambdaScriptBucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:PutObject
+            Effect: Allow
+            Principal:
+              Service: ses.amazonaws.com
+            Resource: !Sub 'arn:aws:s3:::${ProxyLambdaScriptBucket}/*'
+            Principal: '*'
+            Condition:
+              StringEquals:
+                'aws:Referer': !Ref AccountId
+    
+  ProxyLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: email-proxy-s3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${ProxyLambdaScriptBucket}/*"
+
+  ProxyLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Role: !GetAtt ProxyLambdaRole.Arn
+      FunctionName: EmailProxy
+      Runtime: nodejs14.x
+      Handler: index.handler
+      Code:
+        S3Bucket: !Ref ProxyLambdaScriptBucket
+        S3Key: email-proxy.zip
+    
+  ProxyLambdaSESPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt ProxyLambda.Arn
+      Principal: ses.amazonaws.com
+      SourceAccount: !Ref AccountId
   
   EmailReceiptRuleSet:
     Type: AWS::SES::ReceiptRuleSet
@@ -119,12 +184,14 @@ Resources:
       RuleSetName: !Ref EmailReceiptRuleSet
       Rule:
         Enabled: True
-        Name: ForwardToSNS
+        Name: ForwardProxy
         Recipients:
           - hi@rhysc.me
         Actions:
-          - SNSAction:
-              TopicArn: !Ref EmailProxySNSTopic
+          - S3Action:
+              BucketName: !Ref ProxyLambdaScriptBucket
+          - LambdaAction:
+              FunctionArn: !GetAtt ProxyLambda.Arn
 
   MXRecord:
     Type: AWS::Route53::RecordSet
