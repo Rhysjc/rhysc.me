@@ -12,6 +12,7 @@ interface BlogPostData {
       title: string
       date: string
       slug: string
+      ogImage?: string
     }
     body: string
   }
@@ -41,6 +42,7 @@ export const query = graphql`
         title
         date(formatString: "MMMM D, YYYY")
         slug
+        ogImage
       }
       body
     }
@@ -51,6 +53,10 @@ export const Head: HeadFC<BlogPostData> = ({ data }) => (
   <>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <title>{data.mdx.frontmatter.title}</title>
+    <meta property="og:title" content={data.mdx.frontmatter.title} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`https://rhysc.me/blog/${data.mdx.frontmatter.slug}`} />
+    <meta property="og:image" content={`https://rhysc.me/${data.mdx.frontmatter.ogImage ?? 'og-image.png'}`} />
   </>
 );
 

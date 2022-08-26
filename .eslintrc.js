@@ -23,6 +23,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     'comma-dangle': ['error', 'always-multiline'],
     'react/prop-types': 'off',
+    '@typescript-eslint/strict-boolean-expressions': 'off',
   },
   settings: {
     react: {
