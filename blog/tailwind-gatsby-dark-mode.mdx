@@ -1,5 +1,5 @@
 ---
-title: Adding dark mode to your Tailwind CSS & Gatsby site
+title: Add a dark mode toggle to your Tailwind & Gatsby site
 date: 2022-08-26
 slug: tailwind-gatsby-dark-mode
 ---
@@ -12,7 +12,7 @@ I'm using `use-dark-mode` for this which is a pretty simple React hook that hand
 npm install use-dark-mode
 ```
 
-You'll then also want to use `gatsby-plugin-use-dark-mode`, which injects a script in to your page that makes sure the dark mode class is appended to the body before your page renders. This is what stops you having a flash if the user isn't using the default theme.
+You'll then also want to use `gatsby-plugin-use-dark-mode`, which injects a script in to your page that makes sure the dark mode class is appended to the body before your page renders. This is what stops you having a flash when the page initially loads.
 
 ```shell
 npm install gatsby-plugin-use-dark-mode
@@ -39,17 +39,22 @@ Tailwind makes this pretty easy, all you need to do is modify your config to add
 }
 ```
 
-This tells Tailwind you want to toggle dark mode manually with a class, rather than just applying the user's default.
+This tells Tailwind you want to toggle dark mode manually with a class, rather than just applying the user's system default.
 
-If you want to change the body's background like I do on this site, you'll want to add this to your global CSS (wherever you add the `@tailwind` stuff)
+If you want to change the body's background like I do on this site, you'll want to add this to your global CSS (wherever you add the `@tailwind` stuff), of course changing the colours to whatever you want.
 ```css
 body {
-  @apply bg-zinc-100 px-2 transition-[background-color];
+  @apply bg-zinc-100;
 }
 
 body.dark {
   @apply bg-zinc-800;
 }
+```
+
+Applying dark mode classes works as normal in tailwind, you just prefix your class with `dark:`, for example
+```html
+<span className="text-zinc-800 dark:text-zinc-100">Text</span>
 ```
 
 ## Putting it together in React
