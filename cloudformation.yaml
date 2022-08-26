@@ -89,3 +89,49 @@ Resources:
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
         HostedZoneId: Z2FDTNDATAQYW2
+  
+  EmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref Domain
+  
+  EmailProxySNSTopic:
+    Type : AWS::SNS::Topic
+    Properties:
+      DisplayName: 'Email Proxy'
+      TopicName: email-proxy
+
+  EmailProxySNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref EmailProxySNSTopic
+      Protocol: email-json
+      Endpoint: rhysjc@gmail.com
+  
+  EmailReceiptRuleSet:
+    Type: AWS::SES::ReceiptRuleSet
+    Properties:
+      RuleSetName: rhyscme-emails
+
+  EmailReceiptRule:
+    Type: AWS::SES::ReceiptRule
+    Properties:
+      RuleSetName: !Ref EmailReceiptRuleSet
+      Rule:
+        Enabled: True
+        Name: ForwardToSNS
+        Recipients:
+          - hi@rhysc.me
+        Actions:
+          - SNSAction:
+              TopicArn: !Ref EmailProxySNSTopic
+
+  MXRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref ZoneId
+      Name: !Ref Domain
+      Type: MX
+      TTL: 3600
+      ResourceRecords:
+        - '10 inbound-smtp.us-east-1.amazonaws.com'
