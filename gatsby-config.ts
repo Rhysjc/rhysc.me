@@ -39,6 +39,16 @@ const config: GatsbyConfig = {
         ],
       },
     },
+    {
+      resolve: 'gatsby-plugin-mixpanel',
+      options: {
+        // Not a secret!
+        apiToken: '9484a7cca51ea941a6d7e1a14e016a76',
+        enableOnDevMode: false,
+        pageViews: 'all',
+        trackPageViewsAs: 'Page view',
+      },
+    },
   ],
 };
 
