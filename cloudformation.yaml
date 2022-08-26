@@ -153,6 +153,11 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !Sub "arn:aws:s3:::${ProxyLambdaScriptBucket}/*"
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref EmailProxySNSTopic
 
   ProxyLambda:
     Type: AWS::Lambda::Function
@@ -161,6 +166,9 @@ Resources:
       FunctionName: EmailProxy
       Runtime: nodejs14.x
       Handler: index.handler
+      Environment:
+        Variables:
+          topicArn: !Ref EmailProxySNSTopic
       Code:
         S3Bucket: !Ref ProxyLambdaScriptBucket
         S3Key: email-proxy.zip
