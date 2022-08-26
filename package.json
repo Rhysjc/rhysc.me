@@ -23,6 +23,7 @@
     "gatsby": "^4.21.1",
     "gatsby-plugin-mdx": "^4.0.0",
     "gatsby-plugin-mixpanel": "^3.7.0",
+    "gatsby-plugin-sitemap": "^5.21.0",
     "gatsby-plugin-use-dark-mode": "^1.5.0",
     "gatsby-remark-prismjs": "^6.21.0",
     "gatsby-source-filesystem": "^4.21.1",
