@@ -1,10 +1,6 @@
 import type { GatsbyConfig } from 'gatsby';
 
 const config: GatsbyConfig = {
-  siteMetadata: {
-    title: 'rhysc.me',
-    siteUrl: 'https://rhysc.me',
-  },
   graphqlTypegen: true,
   plugins: [
     'gatsby-plugin-postcss',
@@ -21,6 +17,26 @@ const config: GatsbyConfig = {
       resolve: 'gatsby-plugin-use-dark-mode',
       options: {
         classNameDark: 'dark',
+      },
+    },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
+        path: `${__dirname}/blog/`,
+        name: 'posts',
+      },
+    },
+    {
+      resolve: 'gatsby-plugin-mdx',
+      options: {
+        gatsbyRemarkPlugins: [
+          {
+            resolve: 'gatsby-remark-prismjs',
+            options: {
+              noInlineHighlight: true,
+            },
+          },
+        ],
       },
     },
   ],

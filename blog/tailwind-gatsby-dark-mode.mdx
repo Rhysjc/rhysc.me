@@ -1,0 +1,69 @@
+---
+title: Add a dark mode toggle to your Tailwind & Gatsby site
+date: 2022-08-26
+slug: tailwind-gatsby-dark-mode
+---
+Getting this set up perfectly (no FOUC, persistence) was a little bit tedious, so I thought I'd christen the blog with a little tutorial.
+
+## Gatsby setup
+I'm using `use-dark-mode` for this which is a pretty simple React hook that handles persisting the user's choice and adding the relevant class to the body. 
+
+```shell
+npm install use-dark-mode
+```
+
+You'll then also want to use `gatsby-plugin-use-dark-mode`, which injects a script in to your page that makes sure the dark mode class is appended to the body before your page renders. This is what stops you having a flash when the page initially loads.
+
+```shell
+npm install gatsby-plugin-use-dark-mode
+```
+
+Next, you'll add the plugin in to `gatsby-config.js`
+```javascript
+{
+  resolve: 'gatsby-plugin-use-dark-mode',
+  options: {
+    classNameDark: 'dark',
+  },
+}
+```
+
+Note that we're overriding the default class name here - by default `use-dark-mode` will add a `dark-mode` class, but this doesn't match up with what Tailwind expects.
+
+## The Tailwind side
+Tailwind makes this pretty easy, all you need to do is modify your config to add the below
+```javascript
+{
+  ...,
+  darkMode: 'class'
+}
+```
+
+This tells Tailwind you want to toggle dark mode manually with a class, rather than just applying the user's system default.
+
+If you want to change the body's background like I do on this site, you'll want to add this to your global CSS (wherever you add the `@tailwind` stuff), of course changing the colours to whatever you want.
+```css
+body {
+  @apply bg-zinc-100;
+}
+
+body.dark {
+  @apply bg-zinc-800;
+}
+```
+
+Applying dark mode classes works as normal in tailwind, you just prefix your class with `dark:`, for example
+```html
+<span className="text-zinc-800 dark:text-zinc-100">Text</span>
+```
+
+## Putting it together in React
+I have a `DarkModeToggle` component that (funnily enough) toggles dark mode!
+
+The important bit is this line
+```javascript
+const { toggle } = useDarkMode(undefined, { classNameDark: 'dark' });
+```
+which tells `use-dark-mode` to use the system default, and apply the `dark` class to the body when the mode is changed. This has to match up with the class you gave to `gatsby-plugin-use-dark-mode` above.
+
+You can then call `toggle` to change the mode whenever you want. This'll be persisted in local storage and you won't have any flashing on first render.
