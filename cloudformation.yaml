@@ -96,19 +96,6 @@ Resources:
     Type: AWS::SES::EmailIdentity
     Properties:
       EmailIdentity: !Ref Domain
-  
-  EmailProxySNSTopic:
-    Type : AWS::SNS::Topic
-    Properties:
-      DisplayName: 'Email Proxy'
-      TopicName: email-proxy
-
-  EmailProxySNSSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: !Ref EmailProxySNSTopic
-      Protocol: email-json
-      Endpoint: rhysjc@gmail.com
 
   ProxyLambdaScriptBucket:
     Type: AWS::S3::Bucket
@@ -155,10 +142,10 @@ Resources:
                   - !Sub "arn:aws:s3:::${ProxyLambdaScriptBucket}/*"
               - Effect: Allow
                 Action:
-                  - sns:Publish
+                  - ses:SendEmail
                 Resource:
-                  - !Ref EmailProxySNSTopic
-
+                  - !Sub 'arn:aws:ses:us-east-1:${AccountId}:identity/${EmailIdentity}'
+                
   ProxyLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -168,7 +155,7 @@ Resources:
       Handler: index.handler
       Environment:
         Variables:
-          topicArn: !Ref EmailProxySNSTopic
+          s3Bucketname: !Ref ProxyLambdaScriptBucket
       Code:
         S3Bucket: !Ref ProxyLambdaScriptBucket
         S3Key: email-proxy.zip

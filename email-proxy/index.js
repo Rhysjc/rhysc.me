@@ -6,7 +6,7 @@ exports.handler = function (event, context, callback) {
 
   console.log(event.Records[0].ses.mail.messageId);
 
-  s3.getObject({ Bucket: 'rhyscme-email-proxy', Key: event.Records[0].ses.mail.messageId }, async (err, data) => {
+  s3.getObject({ Bucket: process.env.s3Bucketname, Key: event.Records[0].ses.mail.messageId }, async (err, data) => {
     if (err) {
       return callback(err);
     }
@@ -15,19 +15,36 @@ exports.handler = function (event, context, callback) {
 
     const parsedEmail = await simpleParser(contents);
 
-    const from = parsedEmail.from.value.map((value) => `${value.name} - ${value.address}`).join(',');
+    const replyTo = parsedEmail.from.value.map((value) => value.address);
+    const subject = parsedEmail.subject;
     const text = parsedEmail.text;
+    const html = parsedEmail.html;
 
-    const topicArn = process.env.topicArn;
+    const params = {
+      Source: 'Email Proxy <proxy@rhysc.me>',
+      Destination: {
+        ToAddresses: ['rhysjc@gmail.com'],
+      },
+      Message: {
+        Subject: {
+          Data: subject,
+        },
+        Body: {
+          Html: {
+            Data: html,
+          },
+          Text: {
+            Data: text,
+          },
+        },
+      },
+      ReplyToAddresses: replyTo,
+    };
 
-    const sns = new aws.SNS();
+    const ses = new aws.SES();
 
-    const message = `Received email from ${from}. Message: ${text}`;
+    const sendEmailPromise = ses.sendEmail(params).promise();
 
-    const publishPromise = sns.publish({ Message: message, TopicArn: topicArn }).promise();
-
-    publishPromise.then(() => {
-      callback();
-    });
+    sendEmailPromise.then(callback);
   });
 };
