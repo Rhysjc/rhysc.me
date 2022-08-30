@@ -4,8 +4,6 @@ const simpleParser = require('mailparser').simpleParser;
 exports.handler = function (event, context, callback) {
   const s3 = new aws.S3();
 
-  console.log(event.Records[0].ses.mail.messageId);
-
   s3.getObject({ Bucket: process.env.s3Bucketname, Key: event.Records[0].ses.mail.messageId }, async (err, data) => {
     if (err) {
       return callback(err);

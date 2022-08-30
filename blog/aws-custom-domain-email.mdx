@@ -1,0 +1,209 @@
+---
+title: Use SES and Lambda on AWS to forward custom domain email
+date: 2022-08-30
+slug: aws-custom-domain-email
+ogImage: blog/aws-custom-domain-email.png
+---
+import { BlogNote } from '../src/components/BlogNote';
+
+I'll start by noting that this solution won't have you sending out email from your custom domain, but it will allow you to receive emails on it and forward them on to your personal account on Gmail or similar, which works for me! Since this uses Lambda you're going to be paying for minimal compute, so you're saving a big chunk of the £5 a month that Google  Workspace will cost you.
+
+All the infrastructure for this is managed with CloudFormation, but you should be able to follow along and recreate things in the AWS console if that's your bag.
+
+## Prerequisites
+I've already got my custom domain set up as a hosted zone inside Route 53 and so I'm not going to cover that here.
+
+## SES
+The SES side of this is pretty simple for now. Before setting up our Lambda, all we need to do is create our identity and add the MX record to Route 53.
+
+```yaml
+EmailIdentity:
+  Type: AWS::SES::EmailIdentity
+  Properties:
+    EmailIdentity: {YOUR DOMAIN}
+
+MXRecord:
+  Type: AWS::Route53::RecordSet
+  Properties:
+    HostedZoneId: {HOSTED ZONE ID}
+    Name: {YOUR DOMAIN}
+    Type: MX
+    TTL: 3600
+    ResourceRecords:
+      - '10 inbound-smtp.us-east-1.amazonaws.com'
+```
+Be sure to replace `{YOUR DOMAIN}` with (funnily enough) your domain, and `{HOSTED ZONE ID}` with the ID of your Route 53 hosted zone. The other thing to note is that there's a region in the MX `ResourceRecords` field, you'll need to change this if you're not using SES in `us-east-1` like me.
+
+<BlogNote>Once you've deployed this, you'll need to verify the identity in SES. You should see a button in SES which will update Route 53 for you with the records needed for the verification.</BlogNote>
+
+## S3 Bucket
+```yaml
+ProxyLambdaScriptBucket:
+  Type: AWS::S3::Bucket
+  Properties:
+    BucketName: {BUCKET NAME}
+
+ProxyLambdaScriptBucketPolicy:
+  Type: AWS::S3::BucketPolicy
+  Properties:
+    Bucket: !Ref ProxyLambdaScriptBucket
+    PolicyDocument:
+      Statement:
+        - Action: s3:PutObject
+          Effect: Allow
+          Principal:
+            Service: ses.amazonaws.com
+          Resource: !Sub 'arn:aws:s3:::${ProxyLambdaScriptBucket}/*'
+          Principal: '*'
+          Condition:
+            StringEquals:
+              'aws:Referer': {AWS ACCOUNT ID}
+```
+What we're doing here is creating an S3 bucket and then attaching a policy to it that allows SES to write to it. Later on we'll be adding a receipt rule to SES which drops the email contents into S3, and this supports that.
+
+Be sure to replace `{BUCKET NAME}` with whatever you want the bucket to be called, and swap in your AWS account ID too.
+
+At this point, you'll want to upload the Lambda code to S3 inside a zip file (be sure to include the `node_modules`!). Here's the code
+```javascript
+const aws = require('aws-sdk');
+const simpleParser = require('mailparser').simpleParser;
+
+exports.handler = function (event, context, callback) {
+  const s3 = new aws.S3();
+
+  s3.getObject({ Bucket: process.env.s3Bucketname, Key: event.Records[0].ses.mail.messageId }, async (err, data) => {
+    if (err) {
+      return callback(err);
+    }
+
+    const contents = data.Body.toString();
+
+    const parsedEmail = await simpleParser(contents);
+
+    const replyTo = parsedEmail.from.value.map((value) => value.address);
+    const subject = parsedEmail.subject;
+    const text = parsedEmail.text;
+    const html = parsedEmail.html;
+
+    const params = {
+      Source: ... // An email on your custom domain,
+      Destination: {
+        ToAddresses: [...] // The email you want the message to be sent on to,
+      },
+      Message: {
+        Subject: {
+          Data: subject,
+        },
+        Body: {
+          Html: {
+            Data: html,
+          },
+          Text: {
+            Data: text,
+          },
+        },
+      },
+      ReplyToAddresses: replyTo,
+    };
+
+    const ses = new aws.SES();
+
+    const sendEmailPromise = ses.sendEmail(params).promise();
+
+    sendEmailPromise.then(callback);
+  });
+};
+```
+You'll want to install `mailparser` to support this, which is a great little library that handles parsing MIME stuff. The high level summary of this script is that it grabs an object from S3 which contains the email contents (annoyingly SES doesn't pass them on inside the event which is why we have S3 inbetween), then parses it and forwards it on to whatever email you want.
+
+The two things you'll need to add to the above are an email on your custom domain to send the email from (I went for `proxy@rhysc.me`), and your personal email you'd like the message to be forwarded to.
+
+Once you've uploaded that to your new S3 bucket, we can get on with adding the Lambda.
+
+## Lambda
+```yaml
+ProxyLambdaRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: "sts:AssumeRole"
+    ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Policies:
+      - PolicyName: email-proxy-s3
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !Sub "arn:aws:s3:::${ProxyLambdaScriptBucket}/*"
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource:
+                - !Sub 'arn:aws:ses:us-east-1:{AWS ACCOUNT ID}:identity/${EmailIdentity}'
+              
+ProxyLambda:
+  Type: AWS::Lambda::Function
+  Properties:
+    Role: !GetAtt ProxyLambdaRole.Arn
+    FunctionName: EmailProxy
+    Runtime: nodejs14.x
+    Handler: index.handler
+    Environment:
+      Variables:
+        s3Bucketname: !Ref ProxyLambdaScriptBucket
+    Code:
+      S3Bucket: !Ref ProxyLambdaScriptBucket
+      S3Key: {ZIP FILE NAME}
+  
+ProxyLambdaSESPermission:
+  Type: AWS::Lambda::Permission
+  Properties:
+    Action: 'lambda:InvokeFunction'
+    FunctionName: !GetAtt ProxyLambda.Arn
+    Principal: ses.amazonaws.com
+    SourceAccount: {AWS ACCOUNT ID}
+```
+There is a pretty verbose definition for an IAM role for the Lambda above. Basically it gives the Lambda the basic execution role, which is an AWS managed policy that gives access to CloudWatch logs. We then give it access to get objects from our new S3 bucket, and to send emails from our SES identity. Be sure to swap in your account ID, and change the region if you're not in `us-east-1`.
+
+We then add the definition for our Lambda function itself, be sure to change the `S3Key` to whatever you called your zip file, for example `email-proxy.zip`.
+
+Finally, we give SES permission to invoke the Lambda script.
+
+## SES part 2
+We're very nearly there! All that remains now is to wire up SES to call the Lambda.
+```yaml
+EmailReceiptRuleSet:
+  Type: AWS::SES::ReceiptRuleSet
+  Properties:
+    RuleSetName: proxy-ruleset
+
+EmailReceiptRule:
+  Type: AWS::SES::ReceiptRule
+  Properties:
+    RuleSetName: !Ref EmailReceiptRuleSet
+    Rule:
+      Enabled: True
+      Name: ForwardProxy
+      Recipients:
+        - {YOUR CUSTOM EMAIL}
+      Actions:
+        - S3Action:
+            BucketName: !Ref ProxyLambdaScriptBucket
+        - LambdaAction:
+            FunctionArn: !GetAtt ProxyLambda.Arn
+```
+This creates a receipt rule set and then adds a single rule to it. The rule drops the email contents in S3 and then runs our Lambda. Replace `{YOUR CUSTOM EMAIL}` with whatever you want, (mine is `hi@rhysc.me`!). The receipt rule will drop any emails you're sent into our S3 bucket, and then run the Lambda function.
+
+<BlogNote>You'll need to set the new receipt rule as active in the SES console.</BlogNote>
+
+## Wrapping up
+You should be able to do this while your account is still in the SES sandbox, provided you've verified your personal email in SES.

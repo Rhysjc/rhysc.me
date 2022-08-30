@@ -96,6 +96,16 @@ Resources:
     Type: AWS::SES::EmailIdentity
     Properties:
       EmailIdentity: !Ref Domain
+  
+  MXRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref ZoneId
+      Name: !Ref Domain
+      Type: MX
+      TTL: 3600
+      ResourceRecords:
+        - '10 inbound-smtp.us-east-1.amazonaws.com'
 
   ProxyLambdaScriptBucket:
     Type: AWS::S3::Bucket
@@ -187,13 +197,3 @@ Resources:
               BucketName: !Ref ProxyLambdaScriptBucket
           - LambdaAction:
               FunctionArn: !GetAtt ProxyLambda.Arn
-
-  MXRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref ZoneId
-      Name: !Ref Domain
-      Type: MX
-      TTL: 3600
-      ResourceRecords:
-        - '10 inbound-smtp.us-east-1.amazonaws.com'

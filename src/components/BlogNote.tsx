@@ -10,7 +10,7 @@ const Exclamation: React.FC = () => {
 
 export const BlogNote: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
-    <div className='p-4 rounded-md bg-purple-600 mb-6 flex flex-row items-center justify-between'>
+    <div className='p-4 rounded-md bg-purple-600 mb-6 flex flex-row items-center'>
       <div>
         <Exclamation />
       </div>

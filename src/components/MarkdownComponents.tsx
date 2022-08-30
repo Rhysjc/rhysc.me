@@ -1,7 +1,17 @@
 import { MDXProviderComponentsProp } from '@mdx-js/react';
 import React from 'react';
 
-const h2: React.FC<React.PropsWithChildren> = ({ children }) => <h2 className='font-semibold text-3xl md:text-4xl text-zinc-800 dark:text-zinc-100 mt-8 mb-4'>{children}</h2>;
+const h2: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const classes = 'font-semibold text-3xl md:text-4xl text-zinc-800 dark:text-zinc-100 mt-8 mb-4';
+
+  if (typeof children === 'string') {
+    const hash = children.trim().toLowerCase().replace(' ', '-');
+
+    return <a href={`#${hash}`}><h2 id={hash} className={classes}>{children}</h2></a>;
+  };
+
+  return <h2 className={classes}>{children}</h2>;
+};
 
 const p: React.FC<React.PropsWithChildren> = ({ children }) => <p className='text-lg text-zinc-800 dark:text-zinc-100 mb-6 only:mb-0'>{children}</p>;
 
