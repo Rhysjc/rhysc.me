@@ -56,6 +56,7 @@ export const Head: HeadFC<BlogPostData> = ({ data }) => (
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <title>{data.mdx.frontmatter.title}</title>
     <meta name="description" content={data.mdx.frontmatter.description} />
+    <meta property="og:description" content={data.mdx.frontmatter.description} />
     <meta property="og:title" content={data.mdx.frontmatter.title} />
     <meta property="og:type" content="article" />
     <meta property="og:url" content={`https://rhysc.me/blog/${data.mdx.frontmatter.slug}`} />
