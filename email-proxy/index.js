@@ -43,6 +43,6 @@ exports.handler = function (event, context, callback) {
 
     const sendEmailPromise = ses.sendEmail(params).promise();
 
-    sendEmailPromise.then(callback);
+    sendEmailPromise.then(() => callback());
   });
 };
