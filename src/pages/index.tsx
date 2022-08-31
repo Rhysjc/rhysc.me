@@ -22,6 +22,7 @@ export const Head: HeadFC = () => (
   <>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <title>Rhys Camm</title>
+    <meta name="description" content="UK based Senior Software Engineer" />
     <meta property="og:title" content="Rhys Camm" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rhysc.me" />
