@@ -1,0 +1,127 @@
+---
+title: Automate your React Native app deployments with Fastlane
+date: 2022-08-31
+slug: automate-react-native-deployment-fastlane
+---
+import { BlogNote } from '../src/components/BlogNote';
+
+This is the process I use to deploy [Stryde](https://apps.apple.com/us/app/stryde-workout-planner/id1640276342). Eventually I'll set things up so this runs on a merge to the `main` branch on GitHub, but for now I just do it locally.
+
+Also worth pointing out that I'm only going to cover iOS here, I'll likely post again if/when I release an Android version of Stryde.
+
+## Before you start
+You should follow [Fastlane's guide](https://docs.fastlane.tools/getting-started/ios/setup/) on getting your environment set up.
+
+## Match
+Apple has a kind of convoluted system of provisioning profiles and signing certificates. Fastlane has a tool called match which abstracts away some of this complexity, and stores your profiles and certificates encrypted in a GitHub repo.
+
+If you've messed around inside the Apple developer portal and you'd like to clean things up, you can use `match nuke` to do so. This is an optional step, but if you want to do it you'll need to do it separately for each type of certificate/profile. Let's just do the app store certificates for now.
+```shell
+fastlane match nuke appstore
+```
+
+Now everything's tidy, we can set up match
+```shell
+fastlane match init
+```
+
+This will walk you through setting up your GitHub repo to store your certificates and profiles.
+
+After that, we can run match for each kind of profile we'd like to create. I'll just focus on the `appstore` type which is used to deploy apps to the app store.
+```shell
+fastlane match appstore
+```
+
+Once that's done, we can start with Fastlane.
+
+## Fastlane
+Add the below at the very top of your Fastfile
+```ruby
+before_all do
+  ensure_git_branch(branch: 'main')
+  ensure_git_status_clean
+  git_pull
+end
+```
+This basically says to make sure you're on the `main` branch, that you don't have any uncommitted changes, and then to pull down the latest version of the branch from GitHub. If you don't want to use the `main` branch here, you can change it.
+
+Now we'll define our `:ios` platform
+```ruby
+platform :ios do
+end
+```
+<BlogNote>Don't stress if this syntax is unfamiliar, Fastlane is written in Ruby. I'll include the full Fastfile at the end.</BlogNote>
+
+Now add the below inside that new block.
+```ruby
+lane :certs do
+  match(app_identifier: {APP IDENTIFIER}, type: 'appstore', readonly: true)
+end
+```
+Replace `{APP IDENTIFIER}` with your app's bundle identifier. This code uses match to fetch your app store certificates and profiles from the GitHub repo you set up earlier.
+
+Next, let's add our build lane inside the platform too.  This is the real meat on the bone.
+```ruby
+private_lane :build do
+  app_store_connect_api_key(
+    key_id: ...,
+    issuer_id: ...,
+    key_filepath: ...,
+  )
+
+  certs
+  increment_build_number(xcodeproj: {XCODE PROJECT})
+  build_app(scheme: {APP NAME}, workspace: {WORKSPACE}, configuration: 'Release')
+end
+```
+The `app_store_connect_api_key` bit depends on what Apple authentication method you've decided to use. I'd recommend the [App Store Connect API key method](https://docs.fastlane.tools/app-store-connect-api/) as that's what I've used here. Next we run our `certs` lane, and then increment our build number. Finally we build the app, be sure to set your scheme name and workspace locations.
+
+Finally, all that remains is to put the pieces together
+```ruby
+lane :distribute do
+  build
+  pilot
+  commit_version_bump(message: "Version bump", xcodeproj: {XCODE PROJECT})
+  push_to_git_remote
+end
+```
+This adds a `distribute` lane which runs our `build` lane, pushes the build to the app store with `pilot`, then commits the version bump we did earlier and pushes it to GitHub.
+
+Here's the full code for our Fastfile
+```ruby
+before_all do
+  ensure_git_branch(branch: 'main')
+  ensure_git_status_clean
+  git_pull
+end
+
+platform :ios do
+  lane :certs do
+    match(app_identifier: {APP IDENTIFIER}, type: 'appstore', readonly: true)
+  end
+
+  private_lane :build do
+    app_store_connect_api_key(
+      key_id: ...,
+      issuer_id: ...,
+      key_filepath: ...,
+    )
+
+    certs
+    increment_build_number(xcodeproj: {XCODE PROJECT})
+    build_app(scheme: {APP NAME}, workspace: {WORKSPACE}, configuration: 'Release')
+  end
+
+  lane :distribute do
+    build
+    pilot
+    commit_version_bump(message: "Version bump", xcodeproj: {XCODE PROJECT})
+    push_to_git_remote
+  end
+end
+```
+
+All that remains now is to run Fastlane and build our app!
+```shell
+fastlane ios distribute
+```

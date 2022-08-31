@@ -5,7 +5,7 @@ const h2: React.FC<React.PropsWithChildren> = ({ children }) => {
   const classes = 'font-semibold text-3xl md:text-4xl text-zinc-800 dark:text-zinc-100 mt-8 mb-4';
 
   if (typeof children === 'string') {
-    const hash = children.trim().toLowerCase().replace(' ', '-');
+    const hash = children.trim().toLowerCase().replaceAll(' ', '-');
 
     return <a href={`#${hash}`}><h2 id={hash} className={classes}>{children}</h2></a>;
   };

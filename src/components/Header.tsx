@@ -9,7 +9,7 @@ import { Link } from './Link';
 
 export const Header: React.FC = () => {
   return (
-    <header className="w-full sticky top-0 transition-[background-color] bg-zinc-100 dark:bg-zinc-800">
+    <header className="w-full transition-[background-color] bg-zinc-100 dark:bg-zinc-800">
       <div className="container m-auto flex flex-row justify-between items-center py-4">
         <Logo />
         <div className='flex flex-1 flex-row justify-end items-center'>
