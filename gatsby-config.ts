@@ -38,11 +38,19 @@ const config: GatsbyConfig = {
         classNameDark: 'dark',
       },
     },
+    'gatsby-plugin-sharp',
     {
       resolve: 'gatsby-source-filesystem',
       options: {
         path: `${__dirname}/blog/`,
         name: 'posts',
+      },
+    },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
+        path: `${__dirname}/images/`,
+        name: 'images',
       },
     },
     {
@@ -53,6 +61,12 @@ const config: GatsbyConfig = {
             resolve: 'gatsby-remark-prismjs',
             options: {
               noInlineHighlight: true,
+            },
+          },
+          {
+            resolve: 'gatsby-remark-images',
+            options: {
+              maxWidth: 1024,
             },
           },
         ],

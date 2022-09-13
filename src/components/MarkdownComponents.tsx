@@ -13,9 +13,9 @@ const h2: React.FC<React.PropsWithChildren> = ({ children }) => {
   return <h2 className={classes}>{children}</h2>;
 };
 
-const p: React.FC<React.PropsWithChildren> = ({ children }) => <p className='text-lg text-zinc-800 dark:text-zinc-100 mb-6 only:mb-0'>{children}</p>;
+const p: React.FC<React.PropsWithChildren> = ({ children }) => <p className='text-lg text-zinc-800 dark:text-zinc-100 mb-6 only:mb-0 last:mb-0'>{children}</p>;
 
-const blockquote: React.FC<React.PropsWithChildren> = ({ children }) => <blockquote className='pl-4 mt-2 py-4 border-l-2 border-zinc-300 dark:border-zinc-100'>{children}</blockquote>;
+const blockquote: React.FC<React.PropsWithChildren> = ({ children }) => <blockquote className='pl-4 mt-2 py-4 border-l-2 border-zinc-300 dark:border-zinc-100 mb-6'>{children}</blockquote>;
 
 const code: React.FC<React.PropsWithChildren> = ({ children }) => <code className='font-serif text-sm bg-zinc-200 py-0.5 px-1 rounded-sm text-zinc-800'>{children}</code>;
 
