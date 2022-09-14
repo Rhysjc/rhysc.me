@@ -27,7 +27,7 @@ const Blog: React.FC<React.PropsWithChildren<Props>> = ({ data, children }) => {
     <Layout>
       <div className='mt-6'>
         {data.allMdx.nodes.map((node) => (
-          <div key={node.frontmatter.title} className="mb-4">
+          <div key={node.frontmatter.slug} className="mb-4">
             <Link to={`/blog/${node.frontmatter.slug}`} internal><h3 className='font-semibold font-serif text-2xl md:text-3xl text-zinc-800 dark:text-zinc-100'>{node.frontmatter.title}</h3></Link>
             <span className='block text-sm text-zinc-500'>{node.frontmatter.date}</span>
           </div>
