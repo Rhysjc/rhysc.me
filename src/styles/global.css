@@ -9,7 +9,3 @@ body {
 body.dark {
   @apply bg-zinc-800;
 }
-
-img[src$=".gif"] {
-  @apply max-w-full sm:max-w-md m-auto mb-2;
-}
