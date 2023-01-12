@@ -70,6 +70,9 @@ const config: GatsbyConfig = {
               linkImagesToOriginal: false,
             },
           },
+          {
+            resolve: 'gatsby-remark-copy-linked-files',
+          },
         ],
       },
     },
