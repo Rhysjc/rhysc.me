@@ -3,7 +3,7 @@ import React from 'react';
 import { SkillTag } from './SkillTag';
 import { Heading } from './Heading';
 
-const skills: string[] = ['Node', 'TypeScript', 'React', 'AWS', 'REST APIs', 'Tailwind', 'React Native', 'MongoDB', 'Postgres', 'Redis', 'MySQL', 'CI/CD', 'Vue', 'GraphQL', 'Express', 'Koa', 'Gatsby', 'NextJS', 'Git', 'Jest', 'Cypress', 'Storybook'];
+const skills: string[] = ['GPT', 'Neural networks', 'TensorFlow', 'Serverless', 'Node', 'TypeScript', 'React', 'AWS', 'REST APIs', 'Tailwind', 'React Native', 'MongoDB', 'Postgres', 'Redis', 'MySQL', 'CI/CD', 'Vue', 'GraphQL', 'Express', 'Koa', 'Gatsby', 'NextJS', 'Git', 'Jest', 'Cypress', 'Storybook'];
 
 export const Skills: React.FC = () => {
   return (
